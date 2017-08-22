@@ -1,0 +1,698 @@
+
+#include <Keyboard.h>
+#include <Password.h>
+#include <Keypad.h>
+#include <LiquidCrystal.h>
+#include <Servo.h>
+#include <SoftwareSerial.h>
+#include "SIM900.h"
+#include "sms.h"
+SMSGSM sms;
+Servo myservo;
+String state;
+int count=0;
+
+LiquidCrystal lcd(A0,A1,A2,A3,A4,A5);
+SoftwareSerial BT(10, 11); //TX, RX respetively
+
+Password password = Password("1*5#3");  // password
+int dlugosc = 5;       // length of the password
+int ilosc; // number of clicks
+
+const byte ROWS = 4; // rows
+const byte COLS = 4; // cols
+
+ char keys[ROWS][COLS] =
+{
+  {'1','2','3','A'},
+  {'4','5','6','B'},
+  {'7','8','9','C'},
+  {'*','0','#','D'}
+};
+ 
+byte rowPins[ROWS] = {9,8,7,6};
+byte colPins[COLS] = {5,4,3,2};
+
+Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
+
+
+
+
+int numdata;
+boolean started=false;
+char smsbuffer[160];
+char n[20];
+
+char sms_position;
+char phone_number[20]; // array for the phone number string
+char sms_text[100];
+int i;
+
+
+
+
+void setup() {
+  BT.begin(9600);
+  Serial.begin(9600);
+  lcd.begin(16, 2);
+  myservo.attach(13);
+   keypad.addEventListener(keypadEvent);  
+
+  lcd.setCursor(1,0);
+  lcd.print("  :Welcome:");
+  lcd.setCursor(0,1);
+  lcd.print("PLEASE ENTER PIN");
+}
+
+void loop() {
+    while (BT.available()){  //Check if there is an available byte to read
+  delay(10); //Delay added to make thing stable 
+  char c = BT.read(); //Conduct a serial read
+  state += c; //build the string- either "On" or "off"
+  } 
+  if (state.length() > 0) {
+    Serial.println(state); 
+
+
+  if(state == "11111") 
+  {
+    Serial.println("Success");
+    lcd.setCursor(0,1);
+    lcd.print(" << SUCCESS >>"); 
+   myservo.write(13); 
+    delay(2000);
+    myservo.write(180);
+    delay(2000);
+    lcd.clear();
+  lcd.setCursor(1,0);
+  lcd.print("  :Welcome:");
+  lcd.setCursor(0,1);
+  lcd.print("PLEASE ENTER PIN");
+    
+      } 
+  
+  else if(state == "22222") 
+  {
+   Serial.println("Special Key");
+
+    //Serial.println("PR Haramiii");
+       lcd.setCursor(0,1);
+    lcd.print(" <<Special Key >>"); 
+
+    delay(3000);
+      lcd.clear();
+      
+  lcd.setCursor(1,0);
+  lcd.print("  :Welcome:");
+  lcd.setCursor(0,1);
+  lcd.print("PLEASE ENTER PIN");
+     }
+  else 
+  {
+    Serial.println("Wrong");
+    count=count+1;
+       lcd.setCursor(0,1);
+    lcd.print(" << Wrong Password >>"); 
+    delay(3000);
+    
+      lcd.clear();
+  lcd.setCursor(1,0);
+  lcd.print("  :Welcome:");
+  lcd.setCursor(0,1);
+  lcd.print("PLEASE ENTER PIN");
+  }
+
+  if(count==5){
+
+      
+Serial.println("GSM Shield testing.");
+    //Start configuration of shield with baudrate.
+    //For http uses is raccomanded to use 4800 or slower.
+    if (gsm.begin(4800)) 
+    {
+        Serial.println("\nstatus=READY");
+        started=true;
+    } 
+    else 
+        Serial.println("\nstatus=IDLE");
+
+    if(started) 
+    {
+        //Enable this two lines if you want to send an SMS.
+        if (sms.SendSMS("+8801719252756", "Arduino SMS"))
+        Serial.println("\nSMS sent OK");
+       
+       //if NO SPACE ,you need delte SMS  from position 1 to position 20
+       //please enable this four lines
+       //for(i=1;i<=20;i++)
+       //{
+           //sms.DeleteSMS(i);
+       //}
+    }   
+
+     if(started) 
+    {
+        //Read if there are messages on SIM card and print them.
+        sms_position=sms.IsSMSPresent(SMS_UNREAD);
+        if (sms_position) 
+        {
+            // read new SMS
+            Serial.print("SMS postion:");
+            Serial.println(sms_position,DEC);
+            sms.GetSMS(sms_position, phone_number, sms_text, 100);
+            // now we have phone number string in phone_num
+            Serial.println(phone_number);
+            // and SMS text in sms_text
+            Serial.println(sms_text);
+        }   
+        else
+        {
+            Serial.println("NO NEW SMS,WAITTING");
+        }     
+        delay(1000);
+    }
+
+    Serial.println("GSM Shield testing.");
+    //Start configuration of shield with baudrate.
+    //For http uses is raccomanded to use 4800 or slower.
+    if (gsm.begin(4800)) 
+    {
+        Serial.println("\nstatus=READY");
+        started=true;
+    } 
+    else 
+        Serial.println("\nstatus=IDLE");
+
+    if(started) 
+    {
+        //Enable this two lines if you want to send an SMS.
+        if (sms.SendSMS("+8801759759790", "Arduino SMS"))
+        Serial.println("\nSMS sent OK");
+       
+       //if NO SPACE ,you need delte SMS  from position 1 to position 20
+       //please enable this four lines
+       //for(i=1;i<=20;i++)
+       //{
+           //sms.DeleteSMS(i);
+       //}
+    }   
+
+     if(started) 
+    {
+        //Read if there are messages on SIM card and print them.
+        sms_position=sms.IsSMSPresent(SMS_UNREAD);
+        if (sms_position) 
+        {
+            // read new SMS
+            Serial.print("SMS postion:");
+            Serial.println(sms_position,DEC);
+            sms.GetSMS(sms_position, phone_number, sms_text, 100);
+            // now we have phone number string in phone_num
+            Serial.println(phone_number);
+            // and SMS text in sms_text
+            Serial.println(sms_text);
+        }   
+        else
+        {
+            Serial.println("NO NEW SMS,WAITTING");
+        }     
+        delay(1000);
+    }
+
+    Serial.println("GSM Shield testing.");
+    //Start configuration of shield with baudrate.
+    //For http uses is raccomanded to use 4800 or slower.
+    if (gsm.begin(4800)) 
+    {
+        Serial.println("\nstatus=READY");
+        started=true;
+    } 
+    else 
+        Serial.println("\nstatus=IDLE");
+
+    if(started) 
+    {
+        //Enable this two lines if you want to send an SMS.
+        if (sms.SendSMS("+8801772229364", "Arduino SMS"))
+        Serial.println("\nSMS sent OK");
+       
+       //if NO SPACE ,you need delte SMS  from position 1 to position 20
+       //please enable this four lines
+       //for(i=1;i<=20;i++)
+       //{
+           //sms.DeleteSMS(i);
+       //}
+    }   
+
+     if(started) 
+    {
+        //Read if there are messages on SIM card and print them.
+        sms_position=sms.IsSMSPresent(SMS_UNREAD);
+        if (sms_position) 
+        {
+            // read new SMS
+            Serial.print("SMS postion:");
+            Serial.println(sms_position,DEC);
+            sms.GetSMS(sms_position, phone_number, sms_text, 100);
+            // now we have phone number string in phone_num
+            Serial.println(phone_number);
+            // and SMS text in sms_text
+            Serial.println(sms_text);
+        }   
+        else
+        {
+            Serial.println("NO NEW SMS,WAITTING");
+        }     
+        delay(1000);
+    }
+
+    Serial.println("GSM Shield testing.");
+    //Start configuration of shield with baudrate.
+    //For http uses is raccomanded to use 4800 or slower.
+    if (gsm.begin(4800)) 
+    {
+        Serial.println("\nstatus=READY");
+        started=true;
+    } 
+    else 
+        Serial.println("\nstatus=IDLE");
+
+    if(started) 
+    {
+        //Enable this two lines if you want to send an SMS.
+        if (sms.SendSMS("+8801724166550", "Arduino SMS"))
+        Serial.println("\nSMS sent OK");
+       
+       //if NO SPACE ,you need delte SMS  from position 1 to position 20
+       //please enable this four lines
+       //for(i=1;i<=20;i++)
+       //{
+           //sms.DeleteSMS(i);
+       //}
+    }   
+
+     if(started) 
+    {
+        //Read if there are messages on SIM card and print them.
+        sms_position=sms.IsSMSPresent(SMS_UNREAD);
+        if (sms_position) 
+        {
+            // read new SMS
+            Serial.print("SMS postion:");
+            Serial.println(sms_position,DEC);
+            sms.GetSMS(sms_position, phone_number, sms_text, 100);
+            // now we have phone number string in phone_num
+            Serial.println(phone_number);
+            // and SMS text in sms_text
+            Serial.println(sms_text);
+        }   
+        else
+        {
+            Serial.println("NO NEW SMS,WAITTING");
+        }     
+        delay(1000);
+    }
+
+    
+  }
+   
+  
+state ="";}
+  keypad.getKey();
+
+}
+
+void keypadEvent(KeypadEvent eKey)
+{
+  switch (keypad.getState())
+  {
+    case PRESSED:
+   
+int i;
+for( i = 1; i <= 1; i++ )
+{
+  
+  delay(50);      
+}    
+ 
+Serial.print("Pressed: ");
+Serial.println(eKey);
+ 
+switch (eKey)
+{
+/*
+case '#':
+break;
+ 
+case '*':
+break;
+*/
+ 
+default:
+ilosc=ilosc+1;
+password.append(eKey);
+}
+//Serial.println(ilosc);
+ 
+if(ilosc == 1)
+{
+lcd.clear();
+lcd.setCursor(1,0);
+lcd.print("   < PIN >");
+lcd.setCursor(0,1);
+lcd.print("*_");
+}
+if(ilosc == 2)
+{
+lcd.clear();
+lcd.setCursor(1,0);
+lcd.print("   < PIN >");
+lcd.setCursor(0,1);
+lcd.print("**_");
+}
+if(ilosc == 3)
+{
+lcd.clear();
+lcd.setCursor(1,0);
+lcd.print("   < PIN >");
+lcd.setCursor(0,1);
+lcd.print("***_");
+}
+if(ilosc == 4)
+{
+lcd.clear();
+lcd.setCursor(1,0);
+lcd.print("   < PIN >");
+lcd.setCursor(0,1);
+lcd.print("****_");
+}
+if(ilosc == 5)
+{
+lcd.clear();
+lcd.setCursor(1,0);
+lcd.print("   < PIN >");
+lcd.setCursor(0,1);
+lcd.print("*****_");
+}
+if(ilosc == 6)
+{
+lcd.clear();
+lcd.setCursor(1,0);
+lcd.print("   < PIN >");
+lcd.setCursor(0,1);
+lcd.print("******_");
+}
+if(ilosc == 7)
+{
+lcd.clear();
+lcd.setCursor(1,0);
+lcd.print("   < PIN >");
+lcd.setCursor(0,1);
+lcd.print("*******_");
+}
+if(ilosc ==8)
+{
+lcd.clear();
+lcd.setCursor(1,0);
+lcd.print("   < PIN >");
+lcd.setCursor(0,1);
+lcd.print("********");
+}
+ 
+if(ilosc == dlugosc)
+{
+delay(250);
+checkPassword();
+ilosc = 0;
+}
+}
+}
+ 
+void checkPassword()
+{
+  if (password.evaluate())
+  {
+int i;
+for( i = 1; i <= 2; i++ )
+{
+ 
+  delay(70);      
+}    
+    ilosc = 0;
+ 
+    Serial.println("Success");   
+ 
+    lcd.clear();
+    lcd.setCursor(0,1);
+    lcd.print(" << SUCCESS >>"); 
+    digitalWrite(24,HIGH);
+    delay(2000);
+    digitalWrite(24,LOW);
+    
+    
+    myservo.write(0); 
+    delay(2000);
+    myservo.write(180);
+    delay(3000);
+    myservo.write(0);
+    delay(1000);
+
+    password.reset();
+   // myservo.write(0); 
+   // delay(2000);
+
+    lcd.clear();
+    lcd.setCursor(1,0);
+  lcd.print("  :Welcome:");
+  lcd.setCursor(0,1);
+  lcd.print("PLEASE ENTER PIN");
+
+ 
+ }  
+  else  
+  {
+int i;
+for( i = 1; i <= 1; i++ )
+{
+   
+  delay(70);      
+}  
+    ilosc = 0;  
+    password.reset();
+ 
+    Serial.println("Wrong");
+    count=count+1;
+ 
+    lcd.clear();
+    lcd.setCursor(0,1);
+    lcd.print("  << WRONG >>");
+    digitalWrite(26,HIGH);
+    delay(2000);
+    digitalWrite(26,LOW);
+  // myservo.write(0);
+    delay(3000);
+    password.reset();
+
+    
+     lcd.clear();
+    lcd.setCursor(1,0);
+  lcd.print("  :Welcome:");
+  lcd.setCursor(0,1);
+  lcd.print("PLEASE ENTER PIN");
+  }
+
+if(count==5){
+    
+Serial.println("GSM Shield testing.");
+    //Start configuration of shield with baudrate.
+    //For http uses is raccomanded to use 4800 or slower.
+    if (gsm.begin(4800)) 
+    {
+        Serial.println("\nstatus=READY");
+        started=true;
+    } 
+    else 
+        Serial.println("\nstatus=IDLE");
+
+    if(started) 
+    {
+        //Enable this two lines if you want to send an SMS.
+        if (sms.SendSMS("+8801719252756", "Arduino SMS"))
+        Serial.println("\nSMS sent OK");
+       
+       //if NO SPACE ,you need delte SMS  from position 1 to position 20
+       //please enable this four lines
+       //for(i=1;i<=20;i++)
+       //{
+           //sms.DeleteSMS(i);
+       //}
+    }   
+
+     if(started) 
+    {
+        //Read if there are messages on SIM card and print them.
+        sms_position=sms.IsSMSPresent(SMS_UNREAD);
+        if (sms_position) 
+        {
+            // read new SMS
+            Serial.print("SMS postion:");
+            Serial.println(sms_position,DEC);
+            sms.GetSMS(sms_position, phone_number, sms_text, 100);
+            // now we have phone number string in phone_num
+            Serial.println(phone_number);
+            // and SMS text in sms_text
+            Serial.println(sms_text);
+        }   
+        else
+        {
+            Serial.println("NO NEW SMS,WAITTING");
+        }     
+        delay(1000);
+    }
+
+    Serial.println("GSM Shield testing.");
+    //Start configuration of shield with baudrate.
+    //For http uses is raccomanded to use 4800 or slower.
+    if (gsm.begin(4800)) 
+    {
+        Serial.println("\nstatus=READY");
+        started=true;
+    } 
+    else 
+        Serial.println("\nstatus=IDLE");
+
+    if(started) 
+    {
+        //Enable this two lines if you want to send an SMS.
+        if (sms.SendSMS("+8801759759790", "Arduino SMS"))
+        Serial.println("\nSMS sent OK");
+       
+       //if NO SPACE ,you need delte SMS  from position 1 to position 20
+       //please enable this four lines
+       //for(i=1;i<=20;i++)
+       //{
+           //sms.DeleteSMS(i);
+       //}
+    }   
+
+     if(started) 
+    {
+        //Read if there are messages on SIM card and print them.
+        sms_position=sms.IsSMSPresent(SMS_UNREAD);
+        if (sms_position) 
+        {
+            // read new SMS
+            Serial.print("SMS postion:");
+            Serial.println(sms_position,DEC);
+            sms.GetSMS(sms_position, phone_number, sms_text, 100);
+            // now we have phone number string in phone_num
+            Serial.println(phone_number);
+            // and SMS text in sms_text
+            Serial.println(sms_text);
+        }   
+        else
+        {
+            Serial.println("NO NEW SMS,WAITTING");
+        }     
+        delay(1000);
+    }
+
+    Serial.println("GSM Shield testing.");
+    //Start configuration of shield with baudrate.
+    //For http uses is raccomanded to use 4800 or slower.
+    if (gsm.begin(4800)) 
+    {
+        Serial.println("\nstatus=READY");
+        started=true;
+    } 
+    else 
+        Serial.println("\nstatus=IDLE");
+
+    if(started) 
+    {
+        //Enable this two lines if you want to send an SMS.
+        if (sms.SendSMS("+8801772229364", "Arduino SMS"))
+        Serial.println("\nSMS sent OK");
+       
+       //if NO SPACE ,you need delte SMS  from position 1 to position 20
+       //please enable this four lines
+       //for(i=1;i<=20;i++)
+       //{
+           //sms.DeleteSMS(i);
+       //}
+    }   
+
+     if(started) 
+    {
+        //Read if there are messages on SIM card and print them.
+        sms_position=sms.IsSMSPresent(SMS_UNREAD);
+        if (sms_position) 
+        {
+            // read new SMS
+            Serial.print("SMS postion:");
+            Serial.println(sms_position,DEC);
+            sms.GetSMS(sms_position, phone_number, sms_text, 100);
+            // now we have phone number string in phone_num
+            Serial.println(phone_number);
+            // and SMS text in sms_text
+            Serial.println(sms_text);
+        }   
+        else
+        {
+            Serial.println("NO NEW SMS,WAITTING");
+        }     
+        delay(1000);
+    }
+
+    Serial.println("GSM Shield testing.");
+    //Start configuration of shield with baudrate.
+    //For http uses is raccomanded to use 4800 or slower.
+    if (gsm.begin(4800)) 
+    {
+        Serial.println("\nstatus=READY");
+        started=true;
+    } 
+    else 
+        Serial.println("\nstatus=IDLE");
+
+    if(started) 
+    {
+        //Enable this two lines if you want to send an SMS.
+        if (sms.SendSMS("+8801724166550", "Arduino SMS"))
+        Serial.println("\nSMS sent OK");
+       
+       //if NO SPACE ,you need delte SMS  from position 1 to position 20
+       //please enable this four lines
+       //for(i=1;i<=20;i++)
+       //{
+           //sms.DeleteSMS(i);
+       //}
+    }   
+
+     if(started) 
+    {
+        //Read if there are messages on SIM card and print them.
+        sms_position=sms.IsSMSPresent(SMS_UNREAD);
+        if (sms_position) 
+        {
+            // read new SMS
+            Serial.print("SMS postion:");
+            Serial.println(sms_position,DEC);
+            sms.GetSMS(sms_position, phone_number, sms_text, 100);
+            // now we have phone number string in phone_num
+            Serial.println(phone_number);
+            // and SMS text in sms_text
+            Serial.println(sms_text);
+        }   
+        else
+        {
+            Serial.println("NO NEW SMS,WAITTING");
+        }     
+        delay(1000);
+    }
+ 
+    
+
+  }
+ }; //Reset the variable
+
